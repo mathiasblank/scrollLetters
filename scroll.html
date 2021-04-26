@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll</title>
+</head>
+<body>
+    
+    <style>
+
+        html, body {
+            overflow-x: hidden;
+            padding: 0;
+            margin: 0;
+        }
+
+
+        .init {
+            height: 500vh;
+            width: 100vw;
+            background-color: #2A70FE;
+            color: white;
+            position: relative;
+        }
+
+        .scroll-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100%;
+            opacity: 0;
+            /* padding: 2rem; */
+        }
+
+        .scroll.after .scroll-container {
+            top: 100%;
+            transform: translateY(-100%);
+        }
+
+        .scroll.active .scroll-container {
+            position: fixed;
+        }
+
+        .scroll-item {
+            display: inline-flex;
+            font-size: 20rem;
+            opacity: 0;
+            transform: scale(5);
+            mix-blend-mode: multiply;
+            color: #437df3;
+            /* transition: .15s ease; */
+        }
+
+        .scroll-item--template {
+            position: absolute;
+            transform: scale(1);
+            opacity: 0;
+            /* top: 50%;
+            left: 50%; */
+        }
+
+        .init .scroll-item:first-of-type {
+            opacity: 1 !important;
+        }
+
+    </style>
+
+    <section class="init scroll">
+
+        <div class="scroll-container" data-offset="0-1000" data-scale="1-5" data-size="10-400" data-spacing="100">
+            Toi ami!
+        </div>
+
+    </section>
+
+    <section style="height: 10000px; background-color: #DB43FF;"></section>
+
+    <script>
+
+        (function() {
+
+            const scrollTxts = document.querySelectorAll('.scroll');
+
+            var windowSizes = {width: window.innerWidth, height: window.innerHeight},
+                last_windowSizes = null;
+                  
+            const scrollText = function(init) {
+
+                scrollTxts.forEach((element, key) => {
+
+                    let container = element.querySelector('.scroll-container');
+
+                    if (init) {
+
+                        // - Check if user not self defined letters
+                        let _l = container.querySelectorAll('.scroll-item');
+
+                        if (_l.length == 0) {
+
+                            let _html = container.innerHTML.trim(),
+                                chars = [..._html];
+
+                            container.innerHTML = '';
+                            
+                            // - Generate HTML letters
+                            chars.forEach(function(char) {
+
+                                if (char === ' ') {
+                                    char = '&nbsp';
+                                }
+                                
+                                container.innerHTML += '<span class="scroll-item">' + char + '</span>';
+                                
+                            });
+                            
+                            // - Generate letters' template
+                            container.innerHTML += '<span class="scroll-item scroll-item--template" style="opacity:0">' + _html + '</span>';
+
+                        } 
+                        // - User self defined letters
+                        else {
+
+                            let _html = '';
+
+                            _l.forEach(function(l) {
+                                _html += l.innerHTML;
+                            });
+
+                            // - Generate letters' template
+                            container.innerHTML += '<span class="scroll-item scroll-item--template" style="opacity:0">' + _html + '</span>';
+
+                        }
+
+                        container.style.opacity = 1;
+
+                    }
+
+                    let letters = container.querySelectorAll('.scroll-item:not(.scroll-item--template)'),
+                        template = container.querySelector('.scroll-item--template');
+
+                    letters.forEach(function(letter) {
+                        letter.style.transition = 'none';
+                    });
+
+                    /***************************************************************************************
+                    // - Adjusts letters size
+                    ***************************************************************************************/
+
+                    // - Get computed font-size.
+                    let  _fs = parseInt(window.getComputedStyle(letters[0], null).getPropertyValue('font-size'));
+
+                    // - Get reference width
+                    let w = container.clientWidth > document.body.clientWidth - 10 ? document.body.clientWidth - 10 : container.clientWidth;
+
+                    w -= 100;
+
+                    // - Offsets nav
+                    let fontSizes = [0, 0];
+                    let _fontSizes_str = container.dataset.size;
+                    if (typeof _fontSizes_str == 'string') {
+                        let _fontSizes = _fontSizes_str.split('-');
+                        fontSizes[0] = parseInt(_fontSizes[0]);
+                        fontSizes[1] = parseInt(_fontSizes[1]);
+                    }
+
+                    // - Adjust letter according to screen size
+                    if (last_windowSizes == null || last_windowSizes.width > windowSizes.width) {
+
+                        while (template.clientWidth > w && _fs > fontSizes[0]) {
+
+                            _fs -= 10;
+
+                            letters.forEach(function(letter) {
+                                
+                                letter.style.fontSize = _fs + 'px';
+
+                            });
+
+                            template.style.fontSize = _fs + 'px';
+
+                        }
+
+                    } else {
+
+                        while (_fs < fontSizes[1] && template.clientWidth < w) {
+
+                            _fs += 10;
+
+                            letters.forEach(function(letter) {
+                                
+                                letter.style.fontSize = _fs + 'px';
+
+                            });
+
+                            template.style.fontSize = _fs + 'px';
+
+                        }
+
+                    }
+
+                    /***************************************************************************************
+                    // - Manage letters animation
+                    ***************************************************************************************/
+
+                    // - Element's limits
+                    let t = element.offsetTop;
+                    let b = t + element.clientHeight - window.innerHeight;
+
+                    // - Offsets nav
+                    let offsets = [0, 0];
+                    let _offsets_str = container.dataset.offset;
+                    if (typeof _offsets_str == 'string') {
+                        let _offsets = _offsets_str.split('-');
+                        offsets[0] = parseInt(_offsets[0]);
+                        offsets[1] = parseInt(_offsets[1]);
+                    }
+
+                    // - Scales
+                    let scales = [1, 1];
+                    let _scales_str = container.dataset.scale;
+                    if (typeof _scales_str == 'string') {
+                        let _scales = _scales_str.split('-');
+                        scales[0] = parseInt(_scales[0]);
+                        scales[1] = parseInt(_scales[1]);
+                    }
+
+                    // - scroll animation limits
+                    let _min_with_offset = t + offsets[0];
+                    let _max_with_offset = b - offsets[1];
+
+                    // - scroll animation limits per letters
+                    let _diff = _max_with_offset - _min_with_offset;
+                    let _ranger_per_item = parseInt(_diff / letters.length);
+
+                    if (window.scrollY >= t && window.scrollY <= b) {
+                        
+                        element.classList.add('active');
+                        element.classList.remove('after');
+
+                        for (const key in letters) {
+
+                            if (Object.hasOwnProperty.call(letters, key)) {
+
+                                const letter = letters[key];
+
+                                let min = _min_with_offset + (_ranger_per_item * key);
+                                let max = min + _ranger_per_item;
+                                
+                                if (window.scrollY >= min && window.scrollY <= max) {
+                                    
+                                    // - percentage
+                                    let p = (window.scrollY - min) * 100 / (max - min);
+
+                                    // - Opactity
+                                    letter.style.opacity = p / 100;
+                                    
+                                    // - Scale
+                                    let a = p * ((scales[1] - scales[0]) / 100);
+                                    letter.style.transform = 'scale(' + (scales[1] - a) + ')';
+
+                                } 
+                                // - Letters behaviour before starting scrolling animation
+                                else if (window.scrollY < min) {
+
+                                    letter.style.opacity = 0;
+                                    letter.style.transform = 'scale(' + scales[1] + ')';
+
+                                } 
+                                // - Letters behaviour after starting scrolling animation
+                                else if (window.scrollY > max) {
+
+                                    letter.style.opacity = 1;
+                                    letter.style.transform = 'scale(' + scales[0] + ')';
+
+                                }
+
+                            }
+
+                        }
+
+                    } 
+                    // - Container behaviour after scrolling animation
+                    else if (window.scrollY > b) {
+
+                        element.classList.add('after');
+                        element.classList.remove('active');
+
+                    } 
+                    // - Container behaviour before scrolling animation
+                    else if (window.scrollY < t) {
+
+                        element.classList.remove('active');
+
+                    }
+
+                });
+
+            };
+
+            // - Intit On load
+            scrollText(true);
+
+            // - Update on scroll
+            window.onscroll = () => scrollText(false);
+
+            // - Update on resize
+            window.onresize = function() {
+
+                last_windowSizes = windowSizes;
+  
+                windowSizes = {width: window.innerWidth, height: window.innerHeight};
+
+                scrollText(false);
+
+            };
+
+        })();
+
+    </script>
+
+</body>
+</html>
