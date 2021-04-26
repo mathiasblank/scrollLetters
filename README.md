@@ -25,14 +25,14 @@ The following parameters could be used on the ```.sroll-container``` to custom a
 
 ### Offsets
 
-By default animation starts and ends at the begging and the end of the scroll area, but with offset you can custom it.
+By default animation starts and ends at the beginning and the end of the scroll area, but with offset you can custom it.
 ```
 data-offset="{int:start-offset}-{int:end-offset}"
 ```
 
 ### Scales
 
-Custom starting scale and ending one of each letters.
+Define starting and ending animation scale of each letters.
 ```
 data-scale="{int:end-scale}-{int:start-scale}"
 ```
